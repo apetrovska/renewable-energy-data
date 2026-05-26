@@ -1,0 +1,27 @@
+# Credentials — NEVER commit
+*.json
+.env
+service_account*.json
+*_key.json
+
+# dbt
+target/
+dbt_packages/
+logs/
+.dbt/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Data files — too large for git
+*.csv
+!dbt/seeds/*.csv
+
+# OS
+.DS_Store
+
+# IDE
+.idea/
