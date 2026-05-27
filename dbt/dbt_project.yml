@@ -28,3 +28,22 @@ models:
     marts:
       +materialized: table
       +schema: marts
+
+seeds:
+  renewable_energy_data:
+    country_reference:
+      +column_types:
+        country_code: string
+        country_name: string
+        capital_city: string
+        latitude: float64
+        longitude: float64
+        population: int64
+        is_eu_member: boolean
+        brell_member_pre2025: boolean
+        eu_target_2030_pct: float64
+    country_group_membership:
+      +column_types:
+        country_code: string
+        group_name: string
+        group_description: string
