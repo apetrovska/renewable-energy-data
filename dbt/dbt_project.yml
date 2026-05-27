@@ -1,0 +1,30 @@
+name: 'renewable_energy_data'
+version: '1.0.0'
+profile: 'renewable_energy_data'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+vars:
+  is_dev: false
+  dev_days: 30
+
+models:
+  renewable_energy_data:
+    staging:
+      +materialized: view
+      +schema: staging
+    intermediate:
+      +materialized: table
+      +schema: intermediate
+    marts:
+      +materialized: table
+      +schema: marts
