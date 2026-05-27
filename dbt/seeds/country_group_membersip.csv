@@ -1,0 +1,13 @@
+country_code,group_name,group_description
+DE,core,Primary EU benchmark group spanning full energy spectrum
+FR,core,Primary EU benchmark group spanning full energy spectrum
+ES,core,Primary EU benchmark group spanning full energy spectrum
+PL,core,Primary EU benchmark group spanning full energy spectrum
+AT,core,Primary EU benchmark group spanning full energy spectrum
+HU,core,Primary EU benchmark group spanning full energy spectrum
+NO,geopolitical,Countries with significant geopolitical energy roles
+SK,geopolitical,Countries with significant geopolitical energy roles
+LT,geopolitical,Countries with significant geopolitical energy roles
+LT,baltic,Baltic states that exited Russian BRELL grid in February 2025
+EE,baltic,Baltic states that exited Russian BRELL grid in February 2025
+LV,baltic,Baltic states that exited Russian BRELL grid in February 2025
