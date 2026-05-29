@@ -1,0 +1,155 @@
+version: 2
+
+models:
+  - name: mart_energy_mix
+    description: >
+      Monthly energy mix by country. Includes year-over-year renewable growth.
+      Primary source for Energy Mix dashboard page.
+    columns:
+      - name: country_code
+        description: ISO2 country code
+        tests:
+          - not_null
+      - name: month
+        description: First day of month (DATE_TRUNC)
+        tests:
+          - not_null
+      - name: energy_category
+        description: renewable, fossil, nuclear, other
+        tests:
+          - not_null
+      - name: renewable_share_pct
+        description: Share of renewable generation per country per month (%)
+      - name: yoy_renewable_growth_pct
+        description: >
+          Year-over-year change in renewable share for same month.
+          NULL for first year (no prior year to compare).
+
+  - name: mart_weather_correlation
+    description: >
+      Daily generation joined with weather, enriched with seasonal correlations.
+      Includes anomaly markers for dashboard overlay.
+      Primary source for Weather vs Generation dashboard page.
+    columns:
+      - name: country_code
+        description: ISO2 country code
+        tests:
+          - not_null
+      - name: date
+        description: Date in UTC
+        tests:
+          - not_null
+      - name: wind_generation_correlation
+        description: >
+          CORR(wind_speed_10m_max_kmh, wind_generation_mwh)
+          per country per season per year.
+      - name: solar_generation_correlation
+        description: >
+          CORR(sunshine_duration_hrs, solar_generation_mwh)
+          per country per season per year.
+      - name: is_wind_anomaly
+        description: True if wind generation z-score exceeds 2.5 standard deviations
+      - name: is_solar_anomaly
+        description: True if solar generation z-score exceeds 2.5 standard deviations
+
+  - name: mart_country_independence
+    description: >
+      Yearly self-sufficiency metrics per country.
+      Includes 2030 target progress and CO2 avoided estimate.
+      Primary source for Renewable Independence dashboard page.
+    columns:
+      - name: country_code
+        description: ISO2 country code
+        tests:
+          - not_null
+      - name: year
+        description: Reference year
+        tests:
+          - not_null
+      - name: renewable_independence_days
+        description: Number of days per year where renewable share exceeded 80%
+      - name: pct_progress_toward_2030_target
+        description: >
+          renewable_share_pct / eu_target_2030_pct * 100.
+          NULL for Norway (no EU 2030 target).
+      - name: gap_to_2030_target_pct
+        description: >
+          eu_target_2030_pct - renewable_share_pct.
+          NULL for Norway.
+      - name: co2_avoided_tonnes
+        description: >
+          Estimated CO2 avoided vs EU avg baseline of 300 gCO2/kWh.
+          Approximation documented in README.
+
+  - name: mart_fossil_dependency
+    description: >
+      Monthly fossil exposure by country with group context.
+      Primary source for Fossil Risk dashboard page.
+    columns:
+      - name: country_code
+        description: ISO2 country code
+        tests:
+          - not_null
+      - name: month
+        description: First day of month (DATE_TRUNC)
+        tests:
+          - not_null
+      - name: fossil_dependency_score
+        description: Share of fossil generation per country per month (%)
+      - name: group_name
+        description: Analytical group for filtering
+      - name: rank_overall
+        description: Country rank by renewable share across all 11 countries
+
+  - name: mart_resilience_score
+    description: >
+      Composite resilience score per country per year.
+      Weighted: renewable share 50%, low fossil 30%, 2030 progress 20%.
+      Primary source for dashboard cross-country comparison.
+    columns:
+      - name: country_code
+        description: ISO2 country code
+        tests:
+          - not_null
+      - name: year
+        description: Reference year
+        tests:
+          - not_null
+      - name: resilience_score
+        description: >
+          Composite score 0-100.
+          (renewable_share * 0.5) + ((100 - fossil_score) * 0.3)
+          + (2030_progress * 0.2).
+
+  - name: mart_baltic_story
+    description: >
+      Pre/post BRELL exit analysis for Estonia, Latvia, Lithuania.
+      Split on 2025-02-01 - hard temporal marker for Baltic Synchronization event.
+      Compared against Core group baseline.
+    columns:
+      - name: country_code
+        description: EE, LV, or LT only
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['EE', 'LV', 'LT']
+              config:
+                severity: error
+      - name: date
+        description: Date in UTC
+        tests:
+          - not_null
+      - name: brell_period
+        description: pre_brell (before 2025-02-01) or post_brell
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['pre_brell', 'post_brell']
+              config:
+                severity: error
+      - name: delta_from_core_baseline
+        description: >
+          Baltic country renewable share minus Core group average
+          for the same date.
