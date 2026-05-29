@@ -3,6 +3,8 @@
 .env
 service_account*.json
 *_key.json
+**key.json
+
 
 # dbt
 target/
