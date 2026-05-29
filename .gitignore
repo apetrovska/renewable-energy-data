@@ -1,4 +1,4 @@
-# Credentials — NEVER commit
+# Credentials
 *.json
 .env
 service_account*.json
@@ -18,7 +18,7 @@ __pycache__/
 .venv/
 venv/
 
-# Data files — too large for git
+# Data files
 *.csv
 !dbt/seeds/*.csv
 
