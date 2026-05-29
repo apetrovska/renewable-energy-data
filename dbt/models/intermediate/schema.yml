@@ -1,0 +1,140 @@
+version: 2
+
+models:
+  - name: int_generation_daily
+    description: >
+      Hourly ENTSO-E generation aggregated to daily level.
+      Energy types classified into categories: renewable, fossil, nuclear, other.
+      Season column computed here and reused downstream to avoid repeated CASE logic in marts.
+    columns:
+      - name: country_code
+        description: ISO2 country code
+        tests:
+          - not_null
+      - name: date
+        description: Date in UTC
+        tests:
+          - not_null
+      - name: energy_category
+        description: Classified energy type - renewable, fossil, nuclear, other
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['renewable', 'fossil', 'nuclear', 'other']
+              config:
+                severity: error
+      - name: season
+        description: Season derived from month - winter, spring, summer, autumn
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['winter', 'spring', 'summer', 'autumn']
+              config:
+                severity: error
+      - name: generation_mwh
+        description: Total generation in MWh for this country, date, energy category
+        tests:
+          - not_null
+      - name: load_mwh
+        description: Electricity load (consumption) in MWh
+
+  - name: int_generation_yearly
+    description: >
+      Daily generation aggregated to yearly level.
+      Joined with OWID for capacity context.
+      Note: country_code join uses ISO2 (ENTSO-E) vs ISO3 (OWID) resolved here.
+    columns:
+      - name: country_code
+        description: ISO2 country code
+        tests:
+          - not_null
+      - name: year
+        description: Reference year
+        tests:
+          - not_null
+      - name: renewable_share_pct
+        description: Share of renewable generation (%) computed from ENTSO-E data
+      - name: generation_mwh
+        description: Total generation in MWh
+
+  - name: int_weather_generation
+    description: >
+      Daily generation joined with weather data.
+      Includes 90-day rolling z-scores for wind and solar generation.
+      Anomaly flags where ABS(zscore) > 2.5.
+    columns:
+      - name: country_code
+        description: ISO2 country code
+        tests:
+          - not_null
+      - name: date
+        description: Date in UTC
+        tests:
+          - not_null
+      - name: wind_generation_zscore
+        description: >
+          Z-score of wind generation vs 90-day rolling window.
+          NULLIF guards against zero standard deviation.
+      - name: solar_generation_zscore
+        description: Z-score of solar generation vs 90-day rolling window
+      - name: is_wind_anomaly
+        description: True if ABS(wind_generation_zscore) > 2.5
+      - name: is_solar_anomaly
+        description: True if ABS(solar_generation_zscore) > 2.5
+
+  - name: int_country_profile
+    description: >
+      Country-level yearly summary. Renewable share and fossil dependency
+      computed from ENTSO-E generation data and joined with country reference metadata.
+    columns:
+      - name: country_code
+        description: ISO2 country code
+        tests:
+          - not_null
+      - name: year
+        description: Reference year
+        tests:
+          - not_null
+      - name: renewable_share_pct
+        description: >
+          SUM(renewable_mwh) / SUM(total_generation_mwh) * 100.
+          First computed here - canonical definition per metrics dictionary.
+        tests:
+          - not_null
+      - name: fossil_dependency_score
+        description: >
+          SUM(fossil_mwh) / SUM(total_generation_mwh) * 100.
+          First computed here - canonical definition per metrics dictionary.
+
+  - name: int_country_group_metrics
+    description: >
+      All window functions in one place. Joins country_profile with
+      country_group_membership (many-to-many). Lithuania appears twice per year
+      - once per group (Geopolitical and Baltic Synchronization).
+      Mart models filter on group_name to scope analysis.
+    columns:
+      - name: country_code
+        description: ISO2 country code
+        tests:
+          - not_null
+      - name: group_name
+        description: Analytical group name
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['core', 'geopolitical', 'baltic_synchronization']
+              config:
+                severity: error
+      - name: group_avg_renewable_pct
+        description: >
+          AVG(renewable_share_pct) OVER (PARTITION BY group_name, year).
+          Computed here to keep mart models as simple SELECTs.
+      - name: delta_from_group_avg
+        description: renewable_share_pct minus group_avg_renewable_pct
+      - name: rank_within_group
+        description: RANK() within group ordered by renewable_share_pct DESC
+      - name: rank_overall
+        description: RANK() across all 11 countries ordered by renewable_share_pct DESC
