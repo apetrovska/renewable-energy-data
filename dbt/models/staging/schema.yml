@@ -1,0 +1,111 @@
+version: 2
+
+models:
+  - name: stg_owid_energy
+    description: >
+      Cleaned and typed OWID energy data. Scope-filtered to 11 countries
+      and 2020-2025. Column names preserved from source - renaming happens here,
+      business logic in intermediate layer.
+    columns:
+      - name: country_code_iso3
+        description: ISO3 country code as in OWID source (e.g. DEU, FRA)
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['DEU', 'FRA', 'ESP', 'POL', 'AUT', 'HUN',
+                       'NOR', 'SVK', 'LTU', 'EST', 'LVA']
+              config:
+                severity: error
+
+      - name: year
+        description: Reference year
+        tests:
+          - not_null
+
+      - name: renewable_share_pct
+        description: Share of renewables in electricity generation (%)
+
+      - name: fossil_share_pct
+        description: Share of fossil fuels in electricity generation (%)
+
+      - name: co2_intensity_gco2_kwh
+        description: Carbon intensity of electricity in gCO2/kWh
+
+  - name: stg_weather_daily
+    description: >
+      Daily weather data from Open-Meteo archive API.
+      Coordinates are for capital cities - technical approximation.
+      sunshine_duration converted from seconds to hours here.
+    columns:
+      - name: country_code
+        description: ISO2 country code (e.g. DE, FR)
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['DE', 'FR', 'ES', 'PL', 'AT', 'HU',
+                       'NO', 'SK', 'LT', 'EE', 'LV']
+              config:
+                severity: error
+
+      - name: date
+        description: Date in UTC
+        tests:
+          - not_null
+
+      - name: wind_speed_10m_max_kmh
+        description: >
+          Maximum wind speed at 10m height in km/h.
+          Source field is max, not average — documented limitation.
+        tests:
+          - not_null
+
+      - name: sunshine_duration_hrs
+        description: >
+          Sunshine duration in hours. Converted from seconds
+          (source unit) by dividing by 3600.
+        tests:
+          - not_null
+
+      - name: temperature_avg_c
+        description: Mean daily temperature in Celsius
+        tests:
+          - not_null
+
+      - name: precipitation_mm
+        description: Total daily precipitation in mm
+        tests:
+          - not_null
+
+      - name: cloud_cover_pct
+        description: Mean daily cloud cover in %
+        tests:
+          - not_null
+
+  - name: stg_country_reference
+    description: >
+      Country reference data from seed file. Contains metadata
+      for all 11 countries in scope.
+    columns:
+      - name: country_code
+        description: ISO2 country code
+        tests:
+          - not_null
+          - unique
+          - accepted_values:
+              arguments:
+                values: ['DE', 'FR', 'ES', 'PL', 'AT', 'HU',
+                       'NO', 'SK', 'LT', 'EE', 'LV']
+              config:
+                severity: error
+
+      - name: is_eu_member
+        description: Whether the country is an EU member
+        tests:
+          - not_null
+
+      - name: eu_target_2030_pct
+        description: >
+          EU 2030 renewable energy target in %.
+          NULL for Norway (EEA member, not EU).
