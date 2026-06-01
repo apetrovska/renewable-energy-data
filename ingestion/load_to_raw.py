@@ -50,13 +50,47 @@ def load_weather() -> None:
     load_dataframe(df, "weather_daily", write_disposition="WRITE_TRUNCATE")
 
 
+def load_entsoe(
+    start: "pd.Timestamp | None" = None,
+    end: "pd.Timestamp | None" = None,
+    countries: "list[str] | None" = None,
+) -> None:
+    from ingestion.entsoe_extractor import main as extract_entsoe
+
+    if start is None:
+        start = pd.Timestamp("2023-01-01", tz="UTC")
+    if end is None:
+        end = pd.Timestamp("2026-01-01", tz="UTC")
+
+    df_generation, df_load = extract_entsoe(
+        start=start,
+        end=end,
+        countries=countries,
+    )
+
+    if not df_generation.empty:
+        load_dataframe(
+            df_generation,
+            "entsoe_generation",
+            write_disposition="WRITE_APPEND",
+        )
+
+    if not df_load.empty:
+        load_dataframe(
+            df_load,
+            "entsoe_load",
+            write_disposition="WRITE_APPEND",
+        )
+
+
 if __name__ == "__main__":
     import sys
 
     commands = {
         "owid":    load_owid,
         "weather": load_weather,
-        "all":     lambda: [load_owid(), load_weather()],
+        "entsoe": load_entsoe,
+        "all":     lambda: [load_owid(), load_weather(), load_entsoe()],
     }
 
     arg = sys.argv[1] if len(sys.argv) > 1 else "all"
