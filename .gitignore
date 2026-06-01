@@ -1,16 +1,14 @@
 # Credentials
 *.json
 .env
-service_account*.json
-*_key.json
 **key.json
 
 
 # dbt
 target/
 dbt_packages/
-logs/
 .dbt/
+
 
 # Python
 __pycache__/
@@ -27,4 +25,9 @@ venv/
 
 # IDE
 .idea/
-logs/
+
+# Postgres
+.postgresql
+
+# Logs
+**logs*
