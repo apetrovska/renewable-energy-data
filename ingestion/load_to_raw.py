@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 PROJECT_ID = "renewable-energy-data-pipeline"
 DATASET    = "raw"
 
-client = bigquery.Client(project=PROJECT_ID)
+
 
 
 def load_dataframe(
@@ -19,6 +19,8 @@ def load_dataframe(
     write_disposition: str = "WRITE_TRUNCATE"
 ) -> None:
     """Load a DataFrame into BigQuery raw dataset."""
+
+    client = bigquery.Client(project=PROJECT_ID)
 
     # Add metadata column for freshness checks
     df["_loaded_at"] = datetime.now(timezone.utc)
@@ -37,13 +39,13 @@ def load_dataframe(
 
 
 def load_owid() -> None:
-    from owid_extractor import main as extract_owid
+    from ingestion.owid_extractor import main as extract_owid
     df = extract_owid()
     load_dataframe(df, "owid_energy", write_disposition="WRITE_TRUNCATE")
 
 
 def load_weather() -> None:
-    from weather_extractor import main as extract_weather
+    from ingestion.weather_extractor import main as extract_weather
     df = extract_weather()
     load_dataframe(df, "weather_daily", write_disposition="WRITE_TRUNCATE")
 
