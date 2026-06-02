@@ -3,7 +3,7 @@ networks:
     driver: bridge
 
 x-airflow-common: &airflow-common
-  image: apache/airflow:2.9.3-python3.11
+  build: .
   networks:
     - airflow_network
   environment:
@@ -23,6 +23,7 @@ x-airflow-common: &airflow-common
     - ./ingestion:/opt/airflow/ingestion
     - ./dbt:/opt/airflow/dbt
     - ./logs:/opt/airflow/logs
+    - ./.dbt:/home/airflow/.dbt
     - ./renewable-energy-data-key.json:/opt/airflow/gcp/renewable-energy-data-key.json:ro
 
 services:
