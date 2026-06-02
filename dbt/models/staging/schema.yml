@@ -12,8 +12,7 @@ models:
         tests:
           - not_null
           - accepted_values:
-              arguments:
-                values: ['DEU', 'FRA', 'ESP', 'POL', 'AUT', 'HUN',
+              values: ['DEU', 'FRA', 'ESP', 'POL', 'AUT', 'HUN',
                        'NOR', 'SVK', 'LTU', 'EST', 'LVA']
               config:
                 severity: error
@@ -43,8 +42,7 @@ models:
         tests:
           - not_null
           - accepted_values:
-              arguments:
-                values: ['DE', 'FR', 'ES', 'PL', 'AT', 'HU',
+              values: ['DE', 'FR', 'ES', 'PL', 'AT', 'HU',
                        'NO', 'SK', 'LT', 'EE', 'LV']
               config:
                 severity: error
@@ -94,8 +92,7 @@ models:
           - not_null
           - unique
           - accepted_values:
-              arguments:
-                values: ['DE', 'FR', 'ES', 'PL', 'AT', 'HU',
+              values: ['DE', 'FR', 'ES', 'PL', 'AT', 'HU',
                        'NO', 'SK', 'LT', 'EE', 'LV']
               config:
                 severity: error
