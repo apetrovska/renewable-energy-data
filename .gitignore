@@ -2,6 +2,7 @@
 *.json
 .env
 **key.json
+!.env.example
 
 
 # dbt
