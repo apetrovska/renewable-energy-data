@@ -17,7 +17,7 @@ yearly_generation as (
         energy_category,
 
         sum(generation_mwh)                         as generation_mwh,
-        sum(load_mwh)                               as load_mwh,
+--        sum(load_mwh)                               as load_mwh,
 
         -- Renewable share from generation data
         round(
@@ -36,7 +36,7 @@ joined as (
         g.year,
         g.energy_category,
         g.generation_mwh,
-        g.load_mwh,
+--        g.load_mwh,
         g.renewable_share_pct,
 
         -- From OWID - capacity context

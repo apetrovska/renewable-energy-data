@@ -6,7 +6,7 @@ with profile as (
     select * from {{ ref('int_country_profile') }}
 ),
 
-groups as (
+country_groups as (
     select * from {{ ref('country_group_membership') }}
 ),
 
@@ -21,12 +21,12 @@ joined as (
         p.is_eu_member,
         p.eu_target_2030_pct,
 
-        g.group_name,
-        g.group_description
+        cg.group_name,
+        cg.group_description
 
     from profile p
-    inner join groups g
-        on p.country_code = g.country_code
+    inner join country_groups cg
+        on p.country_code = cg.country_code
 ),
 
 with_window_functions as (

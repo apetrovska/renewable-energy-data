@@ -132,8 +132,7 @@ models:
         tests:
           - not_null
           - accepted_values:
-              arguments:
-                values: ['EE', 'LV', 'LT']
+              values: ['EE', 'LV', 'LT']
               config:
                 severity: error
       - name: date
@@ -145,8 +144,7 @@ models:
         tests:
           - not_null
           - accepted_values:
-              arguments:
-                values: ['pre_brell', 'post_brell']
+              values: ['pre_brell', 'post_brell']
               config:
                 severity: error
       - name: delta_from_core_baseline

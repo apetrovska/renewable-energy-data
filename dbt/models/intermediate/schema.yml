@@ -20,8 +20,7 @@ models:
         tests:
           - not_null
           - accepted_values:
-              arguments:
-                values: ['renewable', 'fossil', 'nuclear', 'other']
+              values: ['renewable', 'fossil', 'nuclear', 'other']
               config:
                 severity: error
       - name: season
@@ -29,8 +28,7 @@ models:
         tests:
           - not_null
           - accepted_values:
-              arguments:
-                values: ['winter', 'spring', 'summer', 'autumn']
+              values: ['winter', 'spring', 'summer', 'autumn']
               config:
                 severity: error
       - name: generation_mwh
@@ -124,8 +122,7 @@ models:
         tests:
           - not_null
           - accepted_values:
-              arguments:
-                values: ['core', 'geopolitical', 'baltic_synchronization']
+              values: ['core', 'geopolitical', 'baltic_synchronization']
               config:
                 severity: error
       - name: group_avg_renewable_pct

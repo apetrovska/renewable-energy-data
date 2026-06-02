@@ -14,30 +14,30 @@ daily as (
     select * from {{ ref('int_generation_daily') }}
 ),
 
--- Days per year where renewable share > 80%
+-- -- Renewable share per day
+daily_renewable as (
+    select
+        country_code,
+        date,
+        EXTRACT(YEAR from date)                     as year,
+        round(
+            sum(case when energy_category = 'renewable'
+                then generation_mwh else 0 end)
+            / nullif(sum(generation_mwh), 0) * 100, 2
+        )                                           as daily_renewable_pct
+
+    from daily
+    group by country_code, date
+),
+
+-- Count days where renewable share > 80%
 independence_days as (
     select
         country_code,
-        EXTRACT(YEAR from date)                     as year,
-
-        count(distinct case
-            when round(
-                sum(case when energy_category = 'renewable'
-                    then generation_mwh else 0 end)
-                / nullif(sum(generation_mwh), 0) * 100, 2
-            ) > 80 then date
-        end)                                        as renewable_independence_days
-
-    from daily
-    group by country_code, year, date
-),
-
-independence_days_agg as (
-    select
-        country_code,
         year,
-        sum(renewable_independence_days)            as renewable_independence_days
-    from independence_days
+        countif(daily_renewable_pct > 80)           as renewable_independence_days
+
+    from daily_renewable
     group by country_code, year
 ),
 
@@ -75,7 +75,7 @@ joined as (
         )                                           as co2_avoided_tonnes
 
     from profile p
-    left join independence_days_agg i
+    left join independence_days i
         on p.country_code = i.country_code
         and p.year = i.year
     left join owid o

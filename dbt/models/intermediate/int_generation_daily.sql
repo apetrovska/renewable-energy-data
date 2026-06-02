@@ -7,7 +7,7 @@
 }}
 
 with source as (
-    select * from {{ source('raw', 'entsoe_generation') }}
+    select * from {{ ref('stg_entsoe_generation') }}
 
     {% if is_incremental() %}
         where DATE(datetime_utc) >= DATE_SUB(
@@ -41,7 +41,6 @@ classified as (
 
         production_type,
         generation_mwh,
-        load_mwh,
 
         -- Season - computed once here, reused downstream
         case
@@ -64,8 +63,7 @@ aggregated as (
         date,
         energy_category,
         season,
-        sum(generation_mwh)                         as generation_mwh,
-        avg(load_mwh)                               as load_mwh
+        sum(generation_mwh)                         as generation_mwh
 
     from classified
     group by country_code, date, energy_category, season

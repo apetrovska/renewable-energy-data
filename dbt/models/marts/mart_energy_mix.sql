@@ -16,7 +16,7 @@ monthly as (
         season,
 
         sum(generation_mwh)                         as generation_mwh,
-        sum(load_mwh)                               as load_mwh,
+--        sum(load_mwh)                               as load_mwh,
 
         -- Renewable share per country per month
         round(

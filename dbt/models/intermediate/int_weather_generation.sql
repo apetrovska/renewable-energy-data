@@ -7,7 +7,7 @@
 }}
 
 with generation as (
-    select * from {{ ref('int_generation_daily') }}
+    select * from {{ ref('stg_entsoe_generation') }}
 
     {% if is_incremental() %}
         where date >= DATE_SUB(
@@ -24,14 +24,23 @@ weather as (
 daily_generation as (
     select
         country_code,
-        date,
-        season,
-        sum(case when energy_category = 'renewable'
-            then generation_mwh else 0 end)         as renewable_mwh,
-        sum(case when production_type in ('Wind Onshore', 'Wind Offshore')
+        DATE(datetime_utc)                          as date,
+
+        case
+            when EXTRACT(MONTH from DATE(datetime_utc)) in (12, 1, 2)  then 'winter'
+            when EXTRACT(MONTH from DATE(datetime_utc)) in (3, 4, 5)   then 'spring'
+            when EXTRACT(MONTH from DATE(datetime_utc)) in (6, 7, 8)   then 'summer'
+            when EXTRACT(MONTH from DATE(datetime_utc)) in (9, 10, 11) then 'autumn'
+        end                                         as season,
+
+        sum(case when production_type in ('wind_onshore', 'wind_offshore')
             then generation_mwh else 0 end)         as wind_generation_mwh,
-        sum(case when production_type = 'Solar'
+        sum(case when production_type = 'solar'
             then generation_mwh else 0 end)         as solar_generation_mwh,
+        sum(case when production_type not in (
+                'fossil_gas', 'fossil_hard_coal', 'fossil_brown_coal',
+                'fossil_oil', 'fossil_coal_gas', 'fossil_peat'
+            ) then generation_mwh else 0 end)       as renewable_mwh,
         sum(generation_mwh)                         as total_generation_mwh
 
     from generation
