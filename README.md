@@ -1,16 +1,16 @@
 # Renewable Energy Analytics Pipeline
 
-**Anna Petrovska** · [github.com/apetrovska](https://github.com/apetrovska) · 2025
+**Anna Petrovska** · [github.com/apetrovska](https://github.com/apetrovska) · 2026
 
-`Python` `dbt Core` `Apache Airflow` `BigQuery` `Snowflake` `Looker Studio` `Docker` `GitHub Actions`
+`Python` `dbt Core` `Apache Airflow` `BigQuery` `Docker` `Snowflake` `Looker Studio` `GitHub Actions`
 
 ---
 
 ## Overview
 
-End-to-end data pipeline tracking European renewable energy generation across 11 countries (2023–2025). Built to demonstrate production-grade dbt and Airflow patterns on real public data.
+End-to-end data pipeline tracking European renewable energy generation across 11 countries (2023-2025). Built to demonstrate production-grade dbt and Airflow patterns on real public data.
 
-The pipeline ingests hourly generation data from ENTSO-E, daily weather from Open-Meteo, and yearly capacity statistics from Our World in Data — transforming them through a layered dbt architecture into analytical marts that answer specific policy questions about Europe's energy transition.
+The pipeline ingests hourly generation data from ENTSO-E, daily weather from Open-Meteo, and yearly capacity statistics from Our World in Data - transforming them through a layered dbt architecture into analytical marts that answer specific policy questions about Europe's energy transition.
 
 **Status: in active development.** Ingestion, dbt transformation, and Airflow orchestration are complete. Data quality tests - in development. Looker Studio dashboard and Snowflake migration TBD.
 
@@ -20,7 +20,7 @@ The pipeline ingests hourly generation data from ENTSO-E, daily weather from Ope
 
 1. Which countries lead Europe's renewable transition, and how has that changed 2023–2025?
 2. How strongly does weather (wind speed, sunshine hours) predict actual renewable generation?
-3. Where and when does fossil fuel dependency peak — and which countries carry the most exposure?
+3. Where and when does fossil fuel dependency peak - and which countries carry the most exposure?
 4. Which countries are closest to full renewable independence? What's blocking the rest?
 5. What measurably changed for Estonia, Latvia, and Lithuania after the BRELL grid exit in February 2025?
 
@@ -36,8 +36,8 @@ Open-Meteo ───┤
 OWID CSV ─────┘
 
 Apache Airflow (orchestration)
-├── energy_pipeline_daily   07:00 UTC — ENTSO-E + weather + dbt run
-└── energy_pipeline_weekly  06:00 UTC Sunday — OWID refresh
+├── energy_pipeline_daily   07:00 UTC - ENTSO-E + weather + dbt run
+└── energy_pipeline_weekly  06:00 UTC Sunday - OWID refresh
 ```
 
 ### Data Sources
@@ -58,7 +58,7 @@ Apache Airflow (orchestration)
 | Geopolitical | NO, SK, LT |
 | Baltic Synchronization | EE, LV, LT |
 
-Lithuania belongs to both Geopolitical and Baltic groups — modeled as a many-to-many seed table.
+Lithuania belongs to both Geopolitical and Baltic groups - modeled as a many-to-many seed table.
 
 ---
 
@@ -91,7 +91,7 @@ marts/
 **Key design decisions:**
 
 - Incremental models on `int_generation_daily` and `int_weather_generation` with a 3-day lookback window to catch ENTSO-E late corrections
-- All window functions centralized in `int_country_group_metrics` — marts are pure SELECTs
+- All window functions centralized in `int_country_group_metrics` - marts are pure SELECTs
 - Z-score anomaly detection uses a 90-day rolling window per country
 - Season computed once in `int_generation_daily`, reused downstream
 
@@ -113,7 +113,7 @@ extract_weather ─┘                                                          
 extract_owid → load_raw_owid (WRITE_TRUNCATE) → notify_on_failure
 ```
 
-`dbt source freshness` runs as a fail-fast gate — stale data never enters transformation.
+`dbt source freshness` runs as a fail-fast gate - stale data never enters transformation.
 
 ---
 
