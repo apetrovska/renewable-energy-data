@@ -41,7 +41,7 @@ DAILY_FIELDS = [
     "cloud_cover_mean",      # %
 ]
 
-REQUEST_DELAY_SECONDS = 1   # Open-Meteo has no rate limit but be polite
+REQUEST_DELAY_SECONDS = 3   # Open-Meteo has no rate limit but be polite
 # ─────────────────────────────────────────────────────────
 
 
@@ -82,10 +82,11 @@ def fetch_all_countries() -> pd.DataFrame:
     """Fetch weather for all 11 countries and combine into one DataFrame."""
     frames = []
 
-    for country_code, coords in COUNTRIES.items():
+    for i, (country_code, coords) in enumerate(COUNTRIES.items()):
+        if i > 0:
+            time.sleep(REQUEST_DELAY_SECONDS)
         df = fetch_country(country_code, coords["lat"], coords["lon"])
         frames.append(df)
-        time.sleep(REQUEST_DELAY_SECONDS)
 
     df_all = pd.concat(frames, ignore_index=True)
     logger.info(
