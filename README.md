@@ -64,6 +64,8 @@ Lithuania belongs to both Geopolitical and Baltic groups - modeled as a many-to-
 
 ## dbt Model Structure
 
+![dbt Lineage Graph](docs/lineage.png)
+
 ```
 staging/
   stg_entsoe_generation     type-cast, standardize production type names
