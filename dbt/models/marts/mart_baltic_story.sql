@@ -54,7 +54,7 @@ baltic as (
             / nullif(sum(d.generation_mwh), 0) * 100, 2
         )                                           as renewable_share_pct,
 
-        w.wind_speed_10m_max_kmh,
+        w.wind_speed_10m_mean_kmh,
         w.sunshine_duration_hrs
 
     from daily d
@@ -65,7 +65,7 @@ baltic as (
     group by
         d.country_code, d.date, d.season,
         year, brell_period,
-        w.wind_speed_10m_max_kmh, w.sunshine_duration_hrs
+        w.wind_speed_10m_mean_kmh, w.sunshine_duration_hrs
 ),
 
 joined as (

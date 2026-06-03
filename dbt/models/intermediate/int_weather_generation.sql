@@ -57,7 +57,7 @@ joined as (
         g.solar_generation_mwh,
         g.total_generation_mwh,
 
-        w.wind_speed_10m_max_kmh,
+        w.wind_speed_10m_mean_kmh,
         w.sunshine_duration_hrs,
         w.temperature_avg_c,
         w.precipitation_mm,

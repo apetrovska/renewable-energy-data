@@ -8,8 +8,8 @@ renamed as (
         cast(country_code as string)                as country_code,
         cast(date as date)                          as date,
 
-        -- Wind - source field is max, not avg; documented in schema.yml
-        cast(wind_speed_10m_max as float64)         as wind_speed_10m_max_kmh,
+        -- Wind - average speed at 10m height
+        cast(wind_speed_10m_mean as float64)        as wind_speed_10m_mean_kmh,
 
         -- Sunshine: source is seconds → convert to hours here
         round(

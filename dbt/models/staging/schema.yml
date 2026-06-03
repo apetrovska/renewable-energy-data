@@ -52,10 +52,9 @@ models:
         tests:
           - not_null
 
-      - name: wind_speed_10m_max_kmh
+      - name: wind_speed_10m_mean_kmh
         description: >
-          Maximum wind speed at 10m height in km/h.
-          Source field is max, not average — documented limitation.
+          Average wind speed at 10m height in km/h.
         tests:
           - not_null
 

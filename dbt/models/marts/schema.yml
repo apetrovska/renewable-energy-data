@@ -41,7 +41,7 @@ models:
           - not_null
       - name: wind_generation_correlation
         description: >
-          CORR(wind_speed_10m_max_kmh, wind_generation_mwh)
+          CORR(wind_speed_10m_mean_kmh, wind_generation_mwh)
           per country per season per year.
       - name: solar_generation_correlation
         description: >

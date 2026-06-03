@@ -14,7 +14,7 @@ correlations as (
 
         -- Wind correlation
         round(
-            CORR(wind_speed_10m_max_kmh, wind_generation_mwh), 4
+            CORR(wind_speed_10m_mean_kmh, wind_generation_mwh), 4
         )                                           as wind_generation_correlation,
 
         -- Solar correlation
@@ -36,7 +36,7 @@ daily_detail as (
         EXTRACT(YEAR from date)                     as year,
         EXTRACT(MONTH from date)                    as month_num,
 
-        wind_speed_10m_max_kmh,
+        wind_speed_10m_mean_kmh,
         sunshine_duration_hrs,
         temperature_avg_c,
         precipitation_mm,
