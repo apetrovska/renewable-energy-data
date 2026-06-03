@@ -1,3 +1,10 @@
+"""Extract energy statistics from Our World in Data (OWID) dataset.
+
+This module downloads the OWID energy dataset from GitHub, applies scope
+filtering (11 European countries, years 2020-2025), and prepares it for
+loading into BigQuery. Semantic transformations happen in dbt staging.
+"""
+
 import io
 import logging
 
@@ -7,7 +14,7 @@ import requests
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# ── Configuration ─────────────────────────────────────────
+# GitHub URL for OWID energy dataset
 OWID_URL = (
     "https://raw.githubusercontent.com/owid/energy-data/master/"
     "owid-energy-data.csv"
@@ -43,7 +50,15 @@ RAW_COLUMNS = [
 
 
 def download_owid() -> pd.DataFrame:
-    """Download the full OWID energy dataset from GitHub."""
+    """Download the full OWID energy dataset from GitHub repository.
+
+    Returns:
+        Raw DataFrame with all rows and columns from OWID energy-data.csv.
+        No filtering or transformation is applied at this stage.
+
+    Raises:
+        requests.HTTPError: If the HTTP request fails (network error, 404, etc.)
+    """
     logger.info("Downloading OWID energy dataset...")
     response = requests.get(OWID_URL, timeout=60)
     response.raise_for_status()
@@ -53,10 +68,23 @@ def download_owid() -> pd.DataFrame:
 
 
 def scope_filter(df: pd.DataFrame) -> pd.DataFrame:
-    """Apply technical scope filter only.
-    All transformation happens in dbt staging.
+    """Apply technical scope filter: countries and time range only.
+
+    All semantic transformation (renaming, unit conversion, aggregation) happens
+    in dbt staging layer, not here.
+
+    Args:
+        df: Raw OWID DataFrame with all columns and rows.
+
+    Returns:
+        Filtered DataFrame containing only:
+        - Columns in RAW_COLUMNS list
+        - Countries in COUNTRIES_ISO3 list (ISO3 codes)
+        - Years from START_YEAR to END_YEAR inclusive
+
+        Column names and values are preserved from source.
     """
-    # Keep only columns that exist in the source
+    # Select columns that exist in the source, warn about missing ones
     available = [c for c in RAW_COLUMNS if c in df.columns]
     missing   = [c for c in RAW_COLUMNS if c not in df.columns]
     if missing:
@@ -64,10 +92,10 @@ def scope_filter(df: pd.DataFrame) -> pd.DataFrame:
 
     df = df[available].copy()
 
-    # Filter to our 11 countries (ISO3 codes — as in source)
+    # Keep only configured countries (ISO3 code format matches source)
     df = df[df["iso_code"].isin(COUNTRIES_ISO3)]
 
-    # Filter to our time window
+    # Keep only configured year range
     df = df[df["year"].between(START_YEAR, END_YEAR)]
 
     logger.info(
@@ -80,7 +108,23 @@ def scope_filter(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def main() -> pd.DataFrame:
-    df_raw      = download_owid()
+    """Extract OWID energy data with country and time scope filtering.
+
+    Returns:
+        Filtered DataFrame with columns in RAW_COLUMNS, countries in COUNTRIES_ISO3,
+        and years from START_YEAR to END_YEAR.
+
+        Column names are preserved from source; transformation happens in dbt staging.
+
+    Side effects:
+        Downloads full OWID dataset from GitHub.
+        Saves filtered sample to ingestion/owid_sample.csv for inspection.
+        Prints data preview and metadata to stdout.
+    """
+    # Download full dataset from GitHub
+    df_raw = download_owid()
+
+    # Apply country and year scope filtering
     df_filtered = scope_filter(df_raw)
 
     # Save locally for inspection before BigQuery load
@@ -88,6 +132,7 @@ def main() -> pd.DataFrame:
     df_filtered.to_csv(output_path, index=False)
     logger.info(f"Saved raw sample to {output_path}")
 
+    # Print data preview and column information
     print("\n── Raw preview (no transformations applied) ──")
     print(df_filtered.head(5).to_string())
     print(f"\nShape: {df_filtered.shape}")
