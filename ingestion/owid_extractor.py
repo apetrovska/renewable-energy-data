@@ -58,6 +58,15 @@ def download_owid() -> pd.DataFrame:
 
     Raises:
         requests.HTTPError: If the HTTP request fails (network error, 404, etc.)
+
+    Example:
+        >>> df = download_owid()
+        >>> df.shape
+        (21870, 137)
+        >>> df.columns.tolist()[:5]
+        ['iso_code', 'country', 'year', 'renewables_share_elec', ...]
+        >>> df['iso_code'].nunique()
+        250
     """
     logger.info("Downloading OWID energy dataset...")
     response = requests.get(OWID_URL, timeout=60)
@@ -68,7 +77,12 @@ def download_owid() -> pd.DataFrame:
 
 
 def scope_filter(df: pd.DataFrame) -> pd.DataFrame:
-    """Apply technical scope filter: countries and time range only.
+    """Apply technical scope filter: load optimization by countries and
+    time range only, not business logic.
+
+    Avoids loading 200+ countries and 50+ years into BigQuery raw layer.
+    Filter criteria are constant (11 countries, 2020-2025) and documented
+    in README Known Limitations as an explicit modeling decision.
 
     All semantic transformation (renaming, unit conversion, aggregation) happens
     in dbt staging layer, not here.
@@ -83,6 +97,16 @@ def scope_filter(df: pd.DataFrame) -> pd.DataFrame:
         - Years from START_YEAR to END_YEAR inclusive
 
         Column names and values are preserved from source.
+
+    Example:
+        >>> df_raw = download_owid()
+        >>> df = scope_filter(df_raw)
+        >>> df.shape
+        (66, 13)
+        >>> df['iso_code'].unique()
+        ['DEU', 'FRA', 'ESP', 'POL', 'AUT', 'HUN', 'NOR', 'SVK', 'LTU', 'EST', 'LVA']
+        >>> sorted(df['year'].unique())
+        [2020, 2021, 2022, 2023, 2024, 2025]
     """
     # Select columns that exist in the source, warn about missing ones
     available = [c for c in RAW_COLUMNS if c in df.columns]
@@ -120,6 +144,18 @@ def main() -> pd.DataFrame:
         Downloads full OWID dataset from GitHub.
         Saves filtered sample to ingestion/owid_sample.csv for inspection.
         Prints data preview and metadata to stdout.
+
+    Example:
+        >>> df = main()
+        >>> df.shape
+        (66, 13)
+        >>> df.columns.tolist()
+        ['iso_code', 'country', 'year', 'renewables_share_elec', ...]
+        >>> df.groupby('iso_code').size()
+        iso_code
+        DEU    6
+        FRA    6
+        ...
     """
     # Download full dataset from GitHub
     df_raw = download_owid()

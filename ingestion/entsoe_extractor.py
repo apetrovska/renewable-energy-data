@@ -23,8 +23,11 @@ COUNTRIES = ["DE", "FR", "ES", "PL", "AT", "HU", "NO", "SK", "LT", "EE", "LV"]
 START_DATE = pd.Timestamp("2023-01-01", tz="UTC")
 END_DATE   = pd.Timestamp("2026-01-01", tz="UTC")
 
-# Production types to keep -- "Actual Aggregated" sub-column only.
-# Keys are ENTSO-E source names, values are our standardized names.
+# Production type mapping: ENTSO-E source names -> standardized snake_case.
+# This is a structural normalization required before loading to BigQuery:
+# original names contain spaces, slashes, and mixed case which are valid
+# in BigQuery string values but inconsistent for downstream SQL filtering.
+# Business logic (energy_category classification) happens in dbt staging.
 PRODUCTION_TYPES = {
     "Biomass":                          "biomass",
     "Fossil Brown coal/Lignite":        "fossil_brown_coal",
@@ -55,6 +58,11 @@ def get_client() -> EntsoePandasClient:
 
     Raises:
         ValueError: If ENTSOE_API_KEY environment variable is not set.
+
+    Example:
+        >>> client = get_client()
+        >>> type(client)
+        <class 'entsoe.entsoe.EntsoePandasClient'>
     """
     api_key = os.environ.get("ENTSOE_API_KEY")
     if not api_key:
@@ -86,6 +94,18 @@ def fetch_generation(
         Data is normalized: filters to 'Actual Aggregated' values only,
         resampled to hourly (if source provides 15-min intervals),
         and converted to UTC timezone.
+
+    Example:
+        >>> start = pd.Timestamp("2023-01-01", tz="UTC")
+        >>> end = pd.Timestamp("2023-01-02", tz="UTC")
+        >>> df = fetch_generation(client, "DE", start, end)
+        >>> df.shape
+        (288, 4)
+        >>> df['production_type'].unique()
+        ['solar', 'wind_onshore', 'nuclear', 'lignite', ...]
+        >>> df.head(1)
+          country_code           datetime_utc production_type  generation_mwh
+        0            DE 2023-01-01 00:00:00+00:00           wind_onshore         5432.1
     """
     logger.info(f"Fetching generation: {country} {start.date()} -> {end.date()}")
 
@@ -154,6 +174,17 @@ def fetch_load(
         - load_mwh: Total load/demand in MWh
 
         Data is normalized: resampled to hourly if necessary and converted to UTC.
+
+    Example:
+        >>> start = pd.Timestamp("2023-01-01", tz="UTC")
+        >>> end = pd.Timestamp("2023-01-02", tz="UTC")
+        >>> df = fetch_load(client, "FR", start, end)
+        >>> df.shape
+        (24, 3)
+        >>> df.head(2)
+          country_code           datetime_utc  load_mwh
+        0            FR 2023-01-01 00:00:00+00:00    52341.5
+        1            FR 2023-01-01 01:00:00+00:00    49875.2
     """
     logger.info(f"Fetching load: {country} {start.date()} -> {end.date()}")
 
@@ -204,6 +235,17 @@ def main(
 
         Both DataFrames are concatenated from individual country queries.
         Empty DataFrames are returned if no data is available for a dataset.
+
+    Example:
+        >>> start = pd.Timestamp("2023-01-01", tz="UTC")
+        >>> end = pd.Timestamp("2023-01-08", tz="UTC")
+        >>> df_gen, df_load = main(start=start, end=end, countries=["DE"])
+        >>> df_gen.shape
+        (960, 4)
+        >>> df_load.shape
+        (168, 3)
+        >>> df_gen['production_type'].nunique()
+        15
     """
     if countries is None:
         countries = COUNTRIES
