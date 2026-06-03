@@ -42,6 +42,16 @@ def load_dataframe(
     Side effects:
         Adds "_loaded_at" timestamp column with current UTC time.
         Creates or modifies table in BigQuery raw dataset.
+
+    Example:
+        >>> df = pd.DataFrame({
+        ...     'country_code': ['DE', 'FR'],
+        ...     'date': ['2023-01-01', '2023-01-01'],
+        ...     'value': [10.5, 11.2]
+        ... })
+        >>> load_dataframe(df, "test_table", write_disposition="WRITE_TRUNCATE")
+        Loading 2 rows into renewable-energy-data-pipeline.raw.test_table...
+        Done — renewable-energy-data-pipeline.raw.test_table
     """
     # Initialize BigQuery client
     client = bigquery.Client(project=PROJECT_ID)
@@ -69,6 +79,15 @@ def load_owid() -> None:
 
     Returns:
         None. Side effect: loads data to BigQuery.
+
+    Example:
+        >>> load_owid()
+        Downloading OWID energy dataset...
+        Downloaded 21,870 rows, 137 columns
+        After scope filter: 66 rows (11 countries, years 2020–2025)
+        Saved raw sample to ingestion/owid_sample.csv
+        Loading 66 rows into renewable-energy-data-pipeline.raw.owid_energy...
+        Done — renewable-energy-data-pipeline.raw.owid_energy
     """
     # Extract filtered OWID energy data
     from ingestion.owid_extractor import main as extract_owid
@@ -83,6 +102,16 @@ def load_weather() -> None:
 
     Returns:
         None. Side effect: loads data to BigQuery.
+
+    Example:
+        >>> load_weather()
+        Fetching weather for DE (52.52, 13.41)...
+        DE: 1095 rows (2023-01-01 → 2025-12-31)
+        ...
+        Total: 12,045 rows — 11 countries, dates 2023-01-01 → 2025-12-31
+        Saved raw sample to ingestion/weather_sample.csv
+        Loading 12,045 rows into renewable-energy-data-pipeline.raw.weather_daily...
+        Done — renewable-energy-data-pipeline.raw.weather_daily
     """
     # Extract daily weather data for all countries
     from ingestion.weather_extractor import main as extract_weather
@@ -110,6 +139,21 @@ def load_entsoe(
     Note:
         Uses WRITE_APPEND disposition to accumulate data from multiple date ranges.
         Only loads non-empty DataFrames.
+
+    Example:
+        >>> start = pd.Timestamp("2023-01-01", tz="UTC")
+        >>> end = pd.Timestamp("2023-01-08", tz="UTC")
+        >>> load_entsoe(start=start, end=end, countries=["DE", "FR"])
+        Fetching generation: DE 2023-01-01 -> 2023-01-08
+        ...
+        Fetching load: DE 2023-01-01 -> 2023-01-08
+        ...
+        Generation: 4,320 rows
+        Load: 384 rows
+        Loading 4,320 rows into renewable-energy-data-pipeline.raw.entsoe_generation...
+        Done — renewable-energy-data-pipeline.raw.entsoe_generation
+        Loading 384 rows into renewable-energy-data-pipeline.raw.entsoe_load...
+        Done — renewable-energy-data-pipeline.raw.entsoe_load
     """
     # Extract generation and load data from ENTSO-E API
     from ingestion.entsoe_extractor import main as extract_entsoe

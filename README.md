@@ -42,11 +42,13 @@ Apache Airflow (orchestration)
 
 ### Data Sources
 
-| Source | Data | Granularity | Refresh |
-|--------|------|-------------|---------|
-| [ENTSO-E](https://transparency.entsoe.eu/) | Electricity generation by type + load | Hourly | Daily |
-| [Open-Meteo](https://open-meteo.com/) | Weather by country capital | Daily | Daily |
-| [Our World in Data](https://github.com/owid/energy-data) | Renewable capacity, CO2 intensity | Yearly | Weekly |
+| Source | Data | Granularity | Refresh | Extractor |
+|--------|------|-------------|---------|-----------|
+| [ENTSO-E](https://transparency.entsoe.eu/) | Electricity generation by type + load | Hourly | Daily | `entsoe_extractor.py` |
+| [Open-Meteo](https://open-meteo.com/) | Weather (wind, sunshine, temp, precip) by country capital | Daily | Daily | `weather_extractor.py` (uses `openmeteo-requests` + `requests-cache`) |
+| [Our World in Data](https://github.com/owid/energy-data) | Renewable capacity, CO2 intensity | Yearly | Weekly | `owid_extractor.py` |
+
+**Open-Meteo Optimization:** Weather extraction uses HTTP response caching and automatic retry with exponential backoff. This reduces API call volume and increases reliability on transient failures.
 
 ### Countries
 
@@ -132,6 +134,32 @@ extract_owid → load_raw_owid (WRITE_TRUNCATE) → notify_on_failure
 | `assert_weather_date_coverage` | weather exists for every generation date | warn |
 | `assert_date_continuity` | no gaps in daily dates per country | warn |
 | `assert_owid_country_coverage` | all 11 countries present per year | error |
+
+---
+
+## Dependencies
+
+### Core Libraries
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `pandas` | ≥2.0.0 | Data transformation and manipulation |
+| `requests` | ≥2.31.0 | HTTP requests |
+| `openmeteo-requests` | ≥1.0.0 | Open-Meteo API client with typed responses |
+| `requests-cache` | ≥1.0.0 | HTTP response caching (reduces Open-Meteo API calls) |
+| `retry-requests` | ≥2.0.0 | Automatic retry with exponential backoff |
+| `entsoe-py` | ≥0.6.0 | ENTSO-E Transparency API client |
+| `google-cloud-bigquery` | ≥3.0.0 | BigQuery integration |
+| `google-cloud-bigquery-storage` | ≥2.0.0 | BigQuery Storage API (fast reads) |
+| `pyarrow` | ≥12.0.0 | Parquet support for BigQuery |
+
+### Installation
+
+```bash
+pip install -r requirements.txt
+```
+
+**Note:** The `openmeteo-requests` library provides typed response parsing and is more efficient than raw `requests` for Open-Meteo. HTTP caching via `requests-cache` reduces redundant API calls when re-running extractors.
 
 ---
 
