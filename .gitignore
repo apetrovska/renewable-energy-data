@@ -20,6 +20,8 @@ venv/
 # Data files
 *.csv
 !dbt/seeds/*.csv
+.cache/
+.cache.sqlite
 
 # OS
 .DS_Store

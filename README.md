@@ -45,10 +45,10 @@ Apache Airflow (orchestration)
 | Source | Data | Granularity | Refresh | Extractor |
 |--------|------|-------------|---------|-----------|
 | [ENTSO-E](https://transparency.entsoe.eu/) | Electricity generation by type + load | Hourly | Daily | `entsoe_extractor.py` |
-| [Open-Meteo](https://open-meteo.com/) | Weather (wind, sunshine, temp, precip) by country capital | Daily | Daily | `weather_extractor.py` (uses `openmeteo-requests` + `requests-cache`) |
+| [Open-Meteo](https://open-meteo.com/) | Weather (wind, sunshine, temp, precip) by country capital | Daily | Daily | `weather_extractor.py` |
 | [Our World in Data](https://github.com/owid/energy-data) | Renewable capacity, CO2 intensity | Yearly | Weekly | `owid_extractor.py` |
 
-**Open-Meteo Optimization:** Weather extraction uses HTTP response caching and automatic retry with exponential backoff. This reduces API call volume and increases reliability on transient failures.
+**Open-Meteo Note:** Weather extraction fetches daily data from Open-Meteo archive API with 3-second rate limiting between country requests and error resilience (skips failed countries, continues with others).
 
 ### Countries
 
@@ -144,10 +144,7 @@ extract_owid → load_raw_owid (WRITE_TRUNCATE) → notify_on_failure
 | Package | Version | Purpose |
 |---------|---------|---------|
 | `pandas` | ≥2.0.0 | Data transformation and manipulation |
-| `requests` | ≥2.31.0 | HTTP requests |
-| `openmeteo-requests` | ≥1.0.0 | Open-Meteo API client with typed responses |
-| `requests-cache` | ≥1.0.0 | HTTP response caching (reduces Open-Meteo API calls) |
-| `retry-requests` | ≥2.0.0 | Automatic retry with exponential backoff |
+| `requests` | ≥2.31.0 | HTTP requests (Open-Meteo, OWID) |
 | `entsoe-py` | ≥0.6.0 | ENTSO-E Transparency API client |
 | `google-cloud-bigquery` | ≥3.0.0 | BigQuery integration |
 | `google-cloud-bigquery-storage` | ≥2.0.0 | BigQuery Storage API (fast reads) |
@@ -159,7 +156,7 @@ extract_owid → load_raw_owid (WRITE_TRUNCATE) → notify_on_failure
 pip install -r requirements.txt
 ```
 
-**Note:** The `openmeteo-requests` library provides typed response parsing and is more efficient than raw `requests` for Open-Meteo. HTTP caching via `requests-cache` reduces redundant API calls when re-running extractors.
+**Note:** All dependencies are production-ready with no optional features. The extractors use industry-standard libraries: `requests` for HTTP, `entsoe-py` for ENTSO-E API, and `google-cloud-bigquery` for data warehousing.
 
 ---
 
